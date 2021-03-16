@@ -19,11 +19,10 @@ mongoose.connect(process.env.MONGO,
 app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json())
-app.use('/movie', require('./routes/movie.js'))
 app.use('/user', require('./routes/user.js'))
-app.use('/',(req,res) =>{
-    res.send("Doux jesus ca marche")
-})
+app.use('/movie', require('./routes/movie.js'))
+app.use('/list', require('./routes/list') )
+/* © */
 
 
 app.listen(port, () => console.log("server started"+port))

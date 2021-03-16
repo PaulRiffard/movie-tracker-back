@@ -13,6 +13,9 @@ const auth = require("../middleware/auth")
 router.post(
     "/signup",
     [
+        check("username", "Please Enter a Valid Username")
+        .not()
+        .isEmpty(),
         check("email", "Please enter a valid email").isEmail(),
         check("password", "Please enter a valid password").isLength({
             min: 6
@@ -25,7 +28,9 @@ router.post(
                 errors: errors.array()
             });
         }
+
         const {
+            username,
             email,
             password
         } = req.body;
@@ -38,23 +43,30 @@ router.post(
                     msg: "User Already Exists"
                 });
             }
+
             user = new User({
+                username,
                 email,
                 password
             });
+
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(password, salt);
+
             await user.save();
+
             const payload = {
                 user: {
-                    id: user.id
+                    userId: user.id,
+                    username: user.username
                 }
             };
+
             jwt.sign(
                 payload,
                 "randomString", {
-                expiresIn: 10000
-            },
+                    expiresIn: 10000
+                },
                 (err, token) => {
                     if (err) throw err;
                     res.status(200).json({
@@ -88,13 +100,13 @@ router.post(
 
         const { email, password } = req.body;
         try {
-            let user = await User.findOne({
-                email
-            });
+            let user = await User.findOne({email});
             if (!user)
                 return res.status(400).json({
                     message: "User Not Exist"
                 });
+
+                console.log('user de ouf',user)
 
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch)
@@ -103,10 +115,13 @@ router.post(
                 });
 
             const payload = {
-                user: {
-                    id: user.id
-                }
+                    user:{
+                    id: user.id,
+                    username: user.username
+                    }
             };
+
+            console.log(payload)
 
             jwt.sign(
                 payload,
@@ -140,5 +155,41 @@ router.get("/me", auth, async (req, res) => {
     }
 });
 
+//////GET USER BY ID //////
+
+router.get('/:id', (req, res, next) => {
+    User.find({_id: req.params.id})
+    .populate('seen', 'title release_date director poster_path mdb runtime ')
+    .exec()
+    .then(doc => {
+        console.log("From database" , doc);
+        if (doc) {
+            res.status(200).json(doc);
+        }
+        else {
+            res.status(404).json({message: "Aucun User trouvé"});
+        }
+    })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({error: err});
+    });
+});
+
+///////////////////// UPDATE //////////////////////
+
+router.put('/:id',async (req, res, next) => {
+    const id = req.params.id;
+    User.update({ _id: id}, req.body)
+    .exec()
+    .then(result => {
+        console.log(result);
+        res.status(200).json(result);
+    })
+    .catch(err => {
+        console.log(err);
+        res.status(500).json({error: err});
+    });
+});
 
 module.exports = router;
