@@ -17,10 +17,17 @@ const UserSchema = mongoose.Schema({
         type: Date,
         default: Date.now()
     },
-    seen:[{
+    seen:[
+        {
+            movie:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Movie',
-    }]
+            },
+            date:{
+                type:Date 
+            }
+    }
+]
 });
 
 // export model user with UserSchema

@@ -159,7 +159,7 @@ router.get("/me", auth, async (req, res) => {
 
 router.get('/:id', (req, res, next) => {
     User.find({_id: req.params.id})
-    .populate('seen', 'title release_date director poster_path mdb runtime ')
+    .populate('seen.movie', 'title release_date director poster_path mdb runtime genres ')
     .exec()
     .then(doc => {
         console.log("From database" , doc);
